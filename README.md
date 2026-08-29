@@ -80,6 +80,21 @@ and the git metadata stay local.
 Directory structure matters — the case study lives at
 `/work/hiring-automation/`. Do not flatten it.
 
+### The ownership guard
+
+This hosting account carries more than one site. Since the deploy uses
+`rsync --delete`, a wrong `REMOTE_DIR` would erase whatever lives at
+that path. The script therefore refuses to write into a directory it
+does not recognise:
+
+- it drops `.deployed-by-kevinrocci-repo` on first successful deploy
+- on every later run it checks for that marker
+- a directory that is missing, or occupied by files this script did not
+  put there, aborts with instructions rather than deleting anything
+
+The first real deploy into a non-empty directory needs `--claim`, and
+only after you have listed the directory and confirmed what is in it.
+
 ## Swatches
 
 The six washes in "Off the clock" are generated, not stock art:
