@@ -56,7 +56,7 @@ SFTP_PORT="${SFTP_PORT:-22}"
 
 # Everything the live site needs, and nothing else. The generator, the
 # README and the git metadata stay local.
-PAYLOAD=(index.html style.css nav.js favicon.svg img work)
+PAYLOAD=(.htaccess index.html style.css nav.js favicon.svg img work)
 
 for path in "${PAYLOAD[@]}"; do
   [[ -e "$path" ]] || { echo "error: missing $path" >&2; exit 1; }
@@ -69,8 +69,14 @@ echo "target: $SFTP_USER@$SFTP_HOST:$REMOTE_DIR (port $SFTP_PORT)"
 
 # ---------------------------------------------------------------- rsync
 
-if [[ $FORCE_SFTP -eq 0 ]] && ssh "${SSH_OPTS[@]}" -o BatchMode=yes \
-      -o ConnectTimeout=10 "$SFTP_USER@$SFTP_HOST" true 2>/dev/null; then
+# Detect a real shell by its OUTPUT, not its exit code. Bluehost's
+# shared plans accept the SSH connection, print "Shell access is not
+# enabled on your account!", and still exit 0 — so testing $? picks
+# rsync on a host that cannot run it.
+shell_probe=$(ssh "${SSH_OPTS[@]}" -o BatchMode=yes -o ConnectTimeout=10 \
+              "$SFTP_USER@$SFTP_HOST" 'echo __SHELL_OK__' 2>/dev/null || true)
+
+if [[ $FORCE_SFTP -eq 0 && "$shell_probe" == *__SHELL_OK__* ]]; then
 
   echo "transport: rsync over ssh"
 
@@ -150,7 +156,7 @@ trap 'rm -f "$BATCH"' EXIT
   echo "-mkdir img/magpie"
   echo "-mkdir work"
   echo "-mkdir work/hiring-automation"
-  for f in index.html style.css nav.js favicon.svg; do
+  for f in .htaccess index.html style.css nav.js favicon.svg; do
     echo "put $f"
   done
   echo "put img/feather.svg img/feather.svg"

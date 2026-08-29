@@ -57,25 +57,45 @@ that lost, as a record of the exploration. Render either by name.
 
 ## Publishing
 
-Hosted on Bluehost. Deploy over SSH/SFTP:
+Live at https://kevinrocci.com, hosted on Bluehost.
+
+The plan has **no shell access**, so deploys always take the SFTP path.
+That means every file uploads on every run and nothing is ever deleted
+remotely — if you remove a file from the repo, delete it on the server
+by hand.
+
+Deploy:
+
+```
+./deploy.sh
+```
+
+First-time setup on a new machine:
 
 ```
 cp .deploy.env.example .deploy.env   # fill in host, user, remote dir
-./deploy.sh --dry-run                # preview
-./deploy.sh                          # upload
 ```
 
 `.deploy.env` holds the credentials and is gitignored. It must never be
 committed.
 
-The script prefers `rsync` over SSH, which sends only changed files and
-supports a real dry run. If the host allows SFTP but not a login shell
-it falls back to an `sftp` batch that mirrors the tree. Force that path
-with `./deploy.sh --sftp`.
+The script prefers `rsync` over SSH where a login shell exists, since
+it sends only changed files and supports a real dry run. It detects the
+shell by its **output**, not its exit status — Bluehost accepts the SSH
+connection, prints "Shell access is not enabled on your account!", and
+still exits 0, so testing `$?` picks the wrong transport. On this host
+it correctly falls back to an `sftp` batch.
 
-Only the live payload ships: `index.html`, `style.css`, `nav.js`,
-`favicon.svg`, `img/`, and `work/`. The swatch generator, this README
-and the git metadata stay local.
+Only the live payload ships: `.htaccess`, `index.html`, `style.css`,
+`nav.js`, `favicon.svg`, `img/`, and `work/`. The swatch generator, this
+README and the git metadata stay local.
+
+`.htaccess` carries the canonical-URL rules (force HTTPS, strip www),
+directory-listing lockout, MIME types, and cache policy. It lives in the
+repo rather than in cPanel toggles so the live behaviour is reviewable
+and survives a host move. Note that cPanel cannot set Force HTTPS on
+this domain anyway — addon domains inherit that flag from their parent
+subdomain — so `.htaccess` is doing the work.
 
 Directory structure matters — the case study lives at
 `/work/hiring-automation/`. Do not flatten it.
