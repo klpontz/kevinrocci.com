@@ -1,0 +1,79 @@
+# kevinrocci.com
+
+Static personal site. No build step, no dependencies. Three files plus one
+page directory.
+
+```
+index.html                          home
+work/hiring-automation/index.html   case study
+style.css                           shared stylesheet, design notes at top
+nav.js                              scroll-spy for the rail nav
+favicon.svg                         feather mark, also used in the sidebar
+img/feather.svg                     source of the same mark
+img/swatch-*.png                    generated watercolor washes
+tools/make-swatches.py              regenerates those washes
+```
+
+## Local preview
+
+```
+python3 -m http.server 8080
+```
+
+Then open http://localhost:8080
+
+## Design
+
+The full token set lives in the header comment of `style.css`.
+
+## Palette
+
+Sampled from a **yellow-billed magpie** (*Pica nuttalli*), a bird that
+lives in California's Central Valley and essentially nowhere else. The
+full token set and the reasoning live in the header comment of
+`style.css`.
+
+The bird is two large neutral fields interrupted by two saturated
+marks — the iridescent wing and the yellow bill. The page is built the
+same way: a dark rail, a light column, blue for links, amber for the
+one thing that is active. Nothing sits in the middle.
+
+Three details keep it from reading as a generic dark sidebar:
+
+- The rail is not flat. A magpie's black is structural colour, so it
+  shifts violet at the top and teal at the bottom, with a soft sheen
+  raking across it.
+- The rule under the page title reads left to right as the bird does:
+  bill, head, wing, then a long tail fading out. A yellow-billed
+  magpie's tail is longer than its body, so the rule is long and thin.
+- Section hairlines start as bill yellow for the first 34px, then hand
+  off to the neutral line colour.
+
+All text, links and nav pass WCAG AA (4.5:1); most clear it by a wide
+margin.
+
+`tools/make-swatches.py` still defines the kestrel and heron palettes
+that lost, as a record of the exploration. Render either by name.
+
+## Publishing
+
+Upload the four paths above to the Bluehost `public_html` directory,
+keeping the same structure. Nothing needs to be compiled first.
+
+## Swatches
+
+The six washes in "Off the clock" are generated, not stock art:
+
+```
+python3 tools/make-swatches.py
+```
+
+It writes `img/swatch-<name>.png` using the standard library only — no
+numpy, no Pillow. The model is a cheap version of Curtis et al. 1997:
+edge darkening, granulation, and backruns, with pigment applied by
+Beer-Lambert so thin areas let the page ground through. Output is
+deterministic; change `SEED` in the script to reroll the accidents.
+
+To use hand-painted scans instead, export PNGs with transparent
+backgrounds and drop them in `img/` under the same six filenames. No
+CSS change needed.

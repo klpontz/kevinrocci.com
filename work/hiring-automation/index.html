@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hiring Automation — Kevin Rocci</title>
+<meta name="description" content="A four-stage LLM hiring pipeline, its eval design, and the grader bug that broke six weeks after review.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body class="case">
+
+<div class="shell">
+
+  <aside class="rail">
+    <a class="back" href="../../">&larr; kevinrocci.com</a>
+    <a class="monogram" href="../../" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.2 3.6c1.4 7.3-4.2 13.4-11.9 14.7C4.9 11.3 10 4.9 18.2 3.6Z"/><path d="M4.3 20.6 18.2 3.6"/><path d="M8.9 15.3l5.6-1.1M8.1 11.9l6.2-1.4M9.7 8.8l4.9-1.2"/></svg></a>
+    <div>
+      <p class="rail-name">Hiring Automation</p>
+      <p class="rail-role">Case study</p>
+    </div>
+
+    <nav class="nav" aria-label="Sections">
+      <a href="#summary">Summary</a>
+      <a href="#stages">The four stages</a>
+      <a href="#evals">Eval design</a>
+      <a href="#silent">Silent-failure QA</a>
+      <a href="#scope">Scope discipline</a>
+      <a href="#practice">Engineering practice</a>
+      <a href="#demonstrates">What it shows</a>
+    </nav>
+
+    <div class="rail-foot">
+      <a href="https://github.com/klpontz">github.com/klpontz</a>
+      <a href="https://x.com/kevinrocci">x.com/kevinrocci</a>
+    </div>
+  </aside>
+
+  <main>
+    <div class="col">
+
+      <header id="summary">
+        <p class="label" style="margin:0 0 22px">Case study &nbsp;·&nbsp; Live in production since July 2026</p>
+        <h1>Hiring Automation</h1>
+        <div class="rule"></div>
+        <p class="lede">My company screened every inbound operations application by hand. I replaced that with a four-stage pipeline where a language model evaluates candidate work product against an explicit rubric and decides who advances.</p>
+
+        <div class="meta">
+          <div>
+            <span class="label">Role</span>
+            <p>Sole builder — spec through production, plus the evaluation rubric the system grades against</p>
+          </div>
+          <div>
+            <span class="label">Dates</span>
+            <p>April 2026 – present</p>
+          </div>
+          <div>
+            <span class="label">Stack</span>
+            <p>Google Apps Script, OpenAI API (GPT&#8209;4o + vision), Gmail, Google Sheets, clasp</p>
+          </div>
+        </div>
+
+        <div class="note">
+          <span class="label">The short version</span>
+          <p>The interesting part is not the automation. It is that the rubric is an eval set, the grader is the harness that runs it, and getting one right does not get you the other. A design decision that survived review broke in production six weeks later, because the harness misread its own test content as data.</p>
+        </div>
+      </header>
+
+      <section id="stages">
+        <h2><span class="n">01</span>The four stages</h2>
+        <ol class="stages">
+          <li>
+            <div>
+              <h3>Intake</h3>
+              <p>Parses inbound applications from email, extracts structured fields, applies rule-based filters.</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Questionnaire</h3>
+              <p>Scores and summarizes free-response answers through the OpenAI API. Adds location and compensation gates.</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Portal exercise</h3>
+              <p>Candidates complete a simulated task in a school portal. GPT&#8209;4o vision evaluates the screenshot against a rubric and returns a pass or fail with reasoning.</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Spreadsheet grader</h3>
+              <p>A server-side grader evaluates a spreadsheet submission against an explicit rubric, returns category-level feedback, and runs a two-round retry loop for candidates who can improve.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section id="evals">
+        <h2><span class="n">02</span>The eval design</h2>
+        <p>The core of stage four is not the code. It is the rubric an automated grader enforces, which is the same discipline as designing an eval set for any AI system.</p>
+
+        <div class="find">
+          <h3>Hard gates versus soft gates</h3>
+          <p>I defined which criteria must pass for a candidate to advance, against which are recorded but not disqualifying. That boundary is what keeps the grader from rejecting good candidates or passing weak ones. Both failure directions are expensive, and they are not symmetric: a false reject is invisible and permanent, a false pass surfaces at interview.</p>
+        </div>
+
+        <div class="find">
+          <h3>A deliberate data-fidelity trap</h3>
+          <p>The exercise seeds a flaw in the source data. Reading the spec against the grader's actual behavior surfaced a contradiction — the spec said to forgive the flaw, but the grader correctly rewards a candidate for catching it. Forgiving it would have rewarded the wrong behavior in a hiring exercise. Caught in the design document, before it reached code.</p>
+        </div>
+
+        <div class="find">
+          <h3>The trap broke the grader six weeks later, and that is the more useful half</h3>
+          <p>The design decision held. The implementation did not. In August, the seeded flaw turned out to be splitting two lookup keys into separate buckets, so the grader read its own test content as real data and false-failed candidates who had done the work correctly.</p>
+          <p>Nothing in the design review would have caught it. It took working backward from a live candidate whose numbers were nine of nine correct and who still received a retry email.</p>
+        </div>
+
+        <div class="note">
+          <p>Getting the rubric right is not the same as getting the grader right. An eval is only as good as the harness that runs it, and the harness needs its own adversarial pass.</p>
+        </div>
+
+        <div class="find">
+          <h3>Fixing the harm, not only the bug</h3>
+          <p>A code fix does not un-reject anybody. After deploying, I swept the back catalog for grader-caused failures, rewrote the recorded reasons, manually advanced the confirmed false fail, and queued two candidates for re-grade under the corrected logic. I verified with a negative fixture — a candidate who never catches the seeded flaw still fails — confirming the fix did not quietly lower the bar.</p>
+        </div>
+
+        <div class="find">
+          <h3>Calibration under a real cost function</h3>
+          <ul class="plain">
+            <li>The location gate was set too aggressively at first, then recalibrated after I confirmed East Coast candidates were still viable.</li>
+            <li>Raising the compensation gate exposed a parser that had silently defeated every threshold it ever had. The old helper mis-read comma and abbreviated formats, so a six-figure answer parsed as zero. Every high earner had passed every threshold since the gate existed. I wrote a replacement with 14 tests and verified it against production.</li>
+            <li>Feedback categories expanded from 3 to 12, each tied to a specific instruction step, after the coarse version produced feedback candidates could not act on.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="silent">
+        <h2><span class="n">03</span>Silent-failure QA</h2>
+        <p>The recurring theme across four months. Each of these fails by doing nothing, so no alert fires and no log line appears.</p>
+
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th scope="col">Failure</th><th scope="col">What it would have cost</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Retry pool never fires unless timestamp columns are datetime-formatted</td><td>Every candidate's retry silently vanishes</td></tr>
+              <tr><td>A standalone script cannot install a form-submit trigger from the UI</td><td>The same, caught on deploy day</td></tr>
+              <tr><td>Uncatchable permission error on files not shared with the service identity</td><td>Real runs marked "failed" in production</td></tr>
+              <tr><td>Dev running a stale build missing the core resolver</td><td>Testing a system that is not the one shipping</td></tr>
+              <tr><td>Dev and prod sharing one hard-coded live spreadsheet</td><td>The grader acts on fake candidates the moment it goes live</td></tr>
+              <tr><td>Name-search fallback matching the bot's own alert emails</td><td>It replies to itself, marks the row processed, and the candidate is never retried</td></tr>
+              <tr><td>Form response limits binding to an account while the pipeline keys on a typed address</td><td>One candidate produces two rows and gets double-emailed</td></tr>
+              <tr><td>A questionnaire accepting free text where the pipeline needs numbers</td><td>A qualified answer parses as NaN and auto-rejects</td></tr>
+              <tr><td>Reply recipients resolved from our own last message in the thread</td><td>Every candidate-facing reply addressed to the wrong recipient — correct content, wrong envelope, no error</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p style="margin-top:22px">The last one shipped with form validation plus a hold-for-human path that flags unreadable answers instead of guessing, followed by a sweep of past responses for false rejections. Validation stops the next bad input. Refusing to guess stops the pipeline from making a decision it has no basis for.</p>
+      </section>
+
+      <section id="scope">
+        <h2><span class="n">04</span>Scope discipline</h2>
+        <p>Two decisions where the sophisticated version was worse, not merely more expensive.</p>
+
+        <div class="find">
+          <h3>Killed a fuzzy-matching reconciliation mid-build</h3>
+          <p>School-name matching had grown overlap scoring, edit distance, and tie-breaking. I replaced it with a ten-line rule that acts only when exactly one name is unaccounted for on each side. The simple version had the stronger safety argument: fuzzy matching can silently pair the wrong two schools, while a one-to-one rule either has an unambiguous answer or does nothing. Correctness argued the same way as cost.</p>
+        </div>
+
+        <div class="find">
+          <h3>Parked a six-file remediation plan</h3>
+          <p>For a bug seen once in months, I shipped the four-line piece instead — which also fixed an unrelated class of rejected threads. The larger plan stays available if the failure recurs.</p>
+        </div>
+      </section>
+
+      <section id="practice">
+        <h2><span class="n">05</span>Engineering practice</h2>
+        <ul class="plain">
+          <li>Full spec &rarr; plan &rarr; build &rarr; review &rarr; deploy loop, with per-task and whole-branch code review.</li>
+          <li>The plan caught what the spec missed: a spec-versus-grader contradiction, a second retry round, and a feedback token added at plan stage.</li>
+          <li>Safe deployment — diff live against local before pushing, draft-mode burn-in before flipping the flag, and verify every fixture in production under the correct service identity rather than trusting dev.</li>
+          <li>Local development under version control with clasp and git, adopted as the team standard.</li>
+          <li>Bounded automation scope — new-template submissions auto-grade, legacy submissions stay manual by design. Making the boundary explicit prevents the grader from acting on input it cannot correctly parse.</li>
+        </ul>
+      </section>
+
+      <section id="demonstrates">
+        <h2><span class="n">06</span>What it demonstrates</h2>
+        <p>End-to-end ownership from spec to production. Eval-set design and calibration. Judgment about silent failures — the class of bug that throws no error and writes no log line. Willingness to kill my own sophisticated build for a simpler one with a better safety argument. And the habit of fixing the harm a bug caused, not only the code that caused it.</p>
+
+        <footer>
+          <a href="../../">&larr; Back to kevinrocci.com</a>
+          <span class="label">Kevin Rocci &nbsp;·&nbsp; Sacramento, California</span>
+        </footer>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="currentColor" stroke-width="1.5"
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <!-- vane: asymmetric, the way a real primary feather is -->
+  <path d="M18.2 3.6c1.4 7.3-4.2 13.4-11.9 14.7C4.9 11.3 10 4.9 18.2 3.6Z"/>
+  <!-- shaft, running past the vane into the quill -->
+  <path d="M4.3 20.6 18.2 3.6"/>
+  <!-- barbs -->
+  <path d="M8.9 15.3l5.6-1.1M8.1 11.9l6.2-1.4M9.7 8.8l4.9-1.2"/>
+</svg>
