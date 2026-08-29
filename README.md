@@ -1,127 +1,112 @@
 # kevinrocci.com
 
-Static personal site. No build step, no dependencies. Three files plus one
-page directory.
+My personal site. Two pages, no build step, no dependencies, no
+framework. Plain HTML, one stylesheet, and about forty lines of
+JavaScript that draw a dot next to the section you are reading.
+
+**Live at [kevinrocci.com](https://kevinrocci.com)**
+
+---
+
+## The interesting part
+
+`tools/make-swatches.py` paints the six colour swatches on the home
+page. It is standard library only — no numpy, no Pillow — and it
+encodes the PNGs byte by byte with `zlib` and `struct`.
+
+The model is a cheap version of Curtis et al., *Computer-Generated
+Watercolor* (SIGGRAPH 1997), keeping the three effects that make a wash
+read as watercolor rather than as a gradient:
+
+1. **Edge darkening.** Water evaporates fastest at the rim, so pigment
+   migrates outward and deposits in a dark ring. This is the strongest
+   cue, and the one a CSS gradient never has. It is why the first
+   attempt at these looked like plastic.
+2. **Granulation.** Heavy pigment settles into the paper's low spots,
+   so the field is mottled rather than an even film.
+3. **Backruns.** Water pushed into a drying wash carries pigment with
+   it and leaves a pale island with a harder rim. These took two rounds
+   of tuning — at full strength they read as soap bubbles, and at the
+   second attempt as outlined amoebas.
+
+Pigment is applied by Beer-Lambert, so a thicker deposit transmits less
+light. Output alpha comes from the deposit, which means thin areas let
+the page ground through the way real paper does.
 
 ```
-index.html                          home
-work/hiring-automation/index.html   case study
-style.css                           shared stylesheet, design notes at top
-nav.js                              scroll-spy for the rail nav
-favicon.svg                         feather mark, also used in the sidebar
-img/feather.svg                     source of the same mark
-img/swatch-*.png                    generated watercolor washes
-tools/make-swatches.py              regenerates those washes
+python3 tools/make-swatches.py
 ```
 
-## Local preview
+Deterministic — change `SEED` for a different set of accidents. The
+script also still holds the two palettes that lost the pitch, an
+American kestrel and a great blue heron. Render either by naming it.
 
-```
-python3 -m http.server 8080
-```
-
-Then open http://localhost:8080
+---
 
 ## Design
 
-The full token set lives in the header comment of `style.css`.
-
-## Palette
+### Palette
 
 Sampled from a **yellow-billed magpie** (*Pica nuttalli*), a bird that
-lives in California's Central Valley and essentially nowhere else. The
-full token set and the reasoning live in the header comment of
-`style.css`.
+lives in California's Central Valley and essentially nowhere else. I
+see them constantly. It seemed reasonable to let one pick the colours.
 
-The bird is two large neutral fields interrupted by two saturated
-marks — the iridescent wing and the yellow bill. The page is built the
-same way: a dark rail, a light column, blue for links, amber for the
-one thing that is active. Nothing sits in the middle.
+The bird is built from two enormous neutral fields interrupted by
+exactly two saturated marks — the iridescent wing and the yellow bill.
+The page is built the same way: a dark rail, a light column, blue for
+links, amber for whatever is currently active. Nothing sits in the
+middle.
+
+| | Hex | On the bird |
+|---|---|---|
+| Wing | `#123F52` | iridescent wing and tail |
+| Azure | `#1F6EA8` | the blue that catches the light |
+| Chalk | `#F5F3EE` | belly and scapulars |
+| Pewter | `#93A5B2` | flight-feather grey |
+| Ink | `#161C24` | head and breast |
+| Bill | `#F0AD1B` | bill and eye ring |
+
+The black is never `#000`. A magpie's black is structural colour — an
+interference effect in the feather barbs — so it shifts with the angle
+of the light. The sidebar carries that shift, running violet at the top
+and teal at the bottom. The white is warm, not paper-white.
 
 Three details keep it from reading as a generic dark sidebar:
 
-- The rail is not flat. A magpie's black is structural colour, so it
-  shifts violet at the top and teal at the bottom, with a soft sheen
-  raking across it.
-- The rule under the page title reads left to right as the bird does:
-  bill, head, wing, then a long tail fading out. A yellow-billed
-  magpie's tail is longer than its body, so the rule is long and thin.
-- Section hairlines start as bill yellow for the first 34px, then hand
-  off to the neutral line colour.
+- The rail is not flat, for the reason above.
+- The rule under the page title reads left to right the way the bird
+  does: bill, head, wing, then a long tail fading out. A yellow-billed
+  magpie's tail is longer than its body, so the rule is long and thin
+  rather than short and thick.
+- Section hairlines start as bill yellow for 34px, then hand off to the
+  neutral line colour.
 
-All text, links and nav pass WCAG AA (4.5:1); most clear it by a wide
-margin.
+Every colour pair passes WCAG AA at 4.5:1 — body text, secondary text,
+links against both the page ground and the note fill, and sidebar
+navigation against the rail. Most clear it by a wide margin.
 
-`tools/make-swatches.py` still defines the kestrel and heron palettes
-that lost, as a record of the exploration. Render either by name.
+### Type
 
-## Publishing
+Fraunces for display, with the `SOFT` and `WONK` axes turned up. Wonk
+swaps in the wobbly single-storey alternates, which is where the warmth
+comes from. Source Serif 4 for body, because the case study runs to
+about two thousand words and Fraunces at reading size would be
+exhausting. IBM Plex Mono for labels and data.
 
-Live at https://kevinrocci.com, hosted on Bluehost.
+### Structure
 
-The plan has **no shell access**, so deploys always take the SFTP path.
-That means every file uploads on every run and nothing is ever deleted
-remotely — if you remove a file from the repo, delete it on the server
-by hand.
+Experience entries are field-guide records rather than data tables: the
+employer reads as a common name, the role as its binomial in italic
+underneath. Each carries a span bar on a shared 2013-to-now axis, so
+reading down the stack shows the shape of a career without reading a
+single date.
 
-Deploy:
+---
 
-```
-./deploy.sh
-```
+## The swatches are placeholders
 
-First-time setup on a new machine:
-
-```
-cp .deploy.env.example .deploy.env   # fill in host, user, remote dir
-```
-
-`.deploy.env` holds the credentials and is gitignored. It must never be
-committed.
-
-The script prefers `rsync` over SSH where a login shell exists, since
-it sends only changed files and supports a real dry run. It detects the
-shell by its **output**, not its exit status — Bluehost accepts the SSH
-connection, prints "Shell access is not enabled on your account!", and
-still exits 0, so testing `$?` picks the wrong transport. On this host
-it correctly falls back to an `sftp` batch.
-
-Only the live payload ships: `.htaccess`, `index.html`, `style.css`,
-`nav.js`, `favicon.svg`, `img/`, and `work/`. The swatch generator, this
-README and the git metadata stay local.
-
-`.htaccess` carries the canonical-URL rules (force HTTPS, strip www),
-directory-listing lockout, MIME types, and cache policy. It lives in the
-repo rather than in cPanel toggles so the live behaviour is reviewable
-and survives a host move. Note that cPanel cannot set Force HTTPS on
-this domain anyway — addon domains inherit that flag from their parent
-subdomain — so `.htaccess` is doing the work.
-
-Directory structure matters — the case study lives at
-`/work/hiring-automation/`. Do not flatten it.
-
-### The ownership guard
-
-This hosting account carries more than one site. Since the deploy uses
-`rsync --delete`, a wrong `REMOTE_DIR` would erase whatever lives at
-that path. The script therefore refuses to write into a directory it
-does not recognise:
-
-- it drops `.deployed-by-kevinrocci-repo` on first successful deploy
-- on every later run it checks for that marker
-- a directory that is missing, or occupied by files this script did not
-  put there, aborts with instructions rather than deleting anything
-
-The first real deploy into a non-empty directory needs `--claim`, and
-only after you have listed the directory and confirmed what is in it.
-
-## Swatches
-
-The six washes in "Off the clock" are the palette itself, painted. They
-are currently generated; the intent is to replace them with real
-watercolor.
-
-### The six pigments
+They are generated. The intent is to replace them with real watercolor,
+which is why the palette is specified as pigments and not just hex.
 
 | Swatch | Hex | Pigment | Paint |
 |---|---|---|---|
@@ -132,134 +117,54 @@ watercolor.
 | Ink | `#161C24` | PBk31 + PB15 | Perylene Green + Phthalo Blue |
 | Bill | `#F0AD1B` | PY150 / PY97 | Nickel Azo Yellow, or Winsor Yellow Deep |
 
-Two notes. A magpie's black is structural colour rather than pigment,
-which is why **Ink is mixed from a green and a blue instead of a black**
-— mixed darks stay alive on paper, tube black goes dead. And leave
-**Chalk as unpainted paper**, dropping clear water at the edge to get
-the rim without pigment in the field. That reads more honestly than
-painting an off-white.
+Ink is mixed from a green and a blue rather than from a black, because
+mixed darks stay alive on paper and tube black goes dead. Chalk stays
+unpainted paper with clear water dropped at the edge, which gives the
+rim without any pigment in the field.
 
-### Replacing the generated washes with real ones
-
-Paint them, scan or photograph them, then knock the paper out to
-transparency. Export as PNG:
-
-| | |
-|---|---|
-| Size | 240 x 216 or larger, roughly 10:9 |
-| Background | Transparent — the page ground shows through the thin areas |
-| Location | `img/magpie/` |
-
-Filenames, exactly:
+To swap them in: export PNGs at 240 x 216 or larger, roughly 10:9, with
+a **transparent background** so the page ground shows through the thin
+areas. Drop them in `img/magpie/` as:
 
 ```
 swatch-wing.png    swatch-azure.png    swatch-chalk.png
 swatch-pewter.png  swatch-ink.png      swatch-bill.png
 ```
 
-Then `./deploy.sh`. No CSS or markup changes — the chips are sized with
-`background-size: contain`, so anything near that aspect ratio drops in.
-Each chip carries a small fixed rotation in `style.css` (`.c1` to `.c6`),
-so do not pre-rotate the scans.
+No CSS or markup changes — the chips use `background-size: contain`.
+Each chip carries a small fixed rotation in `style.css`, so do not
+pre-rotate the scans.
 
-### Regenerating the placeholders
+---
 
-```
-python3 tools/make-swatches.py
-```
-
-Standard library only — no numpy, no Pillow. It encodes the PNGs byte by
-byte. The model is a cheap version of Curtis et al., *Computer-Generated
-Watercolor* (1997), keeping the three effects that make a wash read as
-watercolor rather than as a gradient:
-
-1. **Edge darkening.** Water evaporates fastest at the rim, so pigment
-   migrates outward and deposits in a dark ring. This is the strongest
-   cue and the one CSS gradients never have.
-2. **Granulation.** Heavy pigment settles into the paper's low spots.
-3. **Backruns.** Water pushed into a drying wash leaves a pale island
-   with a harder rim.
-
-Pigment is applied by Beer-Lambert, so output alpha comes from deposit
-thickness and thin areas let the ground through the way paper does.
-Output is deterministic — change `SEED` for a different set of
-accidents. The script also still defines the kestrel and heron palettes
-that lost the pitch; render either by naming it.
-
-## Publishing
-
-Live at https://kevinrocci.com, hosted on Bluehost.
-
-The plan has **no shell access**, so deploys always take the SFTP path.
-That means every file uploads on every run and nothing is ever deleted
-remotely — if you remove a file from the repo, delete it on the server
-by hand.
-
-Deploy:
+## Layout
 
 ```
-./deploy.sh
+index.html                          home
+work/hiring-automation/index.html   case study
+style.css                           one stylesheet, design notes at the top
+nav.js                              scroll-spy for the sidebar
+favicon.svg                         feather mark, also used in the sidebar
+img/magpie/swatch-*.png             the six washes
+tools/make-swatches.py              generates them
 ```
 
-First-time setup on a new machine:
+## Running it locally
 
 ```
-cp .deploy.env.example .deploy.env   # fill in host, user, remote dir
+python3 -m http.server 8080
 ```
 
-`.deploy.env` holds the credentials and is gitignored. It must never be
-committed.
+Then open <http://localhost:8080>. That is the whole toolchain.
 
-The script prefers `rsync` over SSH where a login shell exists, since
-it sends only changed files and supports a real dry run. It detects the
-shell by its **output**, not its exit status — Bluehost accepts the SSH
-connection, prints "Shell access is not enabled on your account!", and
-still exits 0, so testing `$?` picks the wrong transport. On this host
-it correctly falls back to an `sftp` batch.
+---
 
-Only the live payload ships: `.htaccess`, `index.html`, `style.css`,
-`nav.js`, `favicon.svg`, `img/`, and `work/`. The swatch generator, this
-README and the git metadata stay local.
+## License
 
-`.htaccess` carries the canonical-URL rules (force HTTPS, strip www),
-directory-listing lockout, MIME types, and cache policy. It lives in the
-repo rather than in cPanel toggles so the live behaviour is reviewable
-and survives a host move. Note that cPanel cannot set Force HTTPS on
-this domain anyway — addon domains inherit that flag from their parent
-subdomain — so `.htaccess` is doing the work.
+**Code** — the stylesheet, the swatch generator, the scroll-spy, the
+deploy script — is [MIT licensed](LICENSE). Take the watercolor
+generator and do something better with it.
 
-Directory structure matters — the case study lives at
-`/work/hiring-automation/`. Do not flatten it.
-
-### The ownership guard
-
-This hosting account carries more than one site. Since the deploy uses
-`rsync --delete`, a wrong `REMOTE_DIR` would erase whatever lives at
-that path. The script therefore refuses to write into a directory it
-does not recognise:
-
-- it drops `.deployed-by-kevinrocci-repo` on first successful deploy
-- on every later run it checks for that marker
-- a directory that is missing, or occupied by files this script did not
-  put there, aborts with instructions rather than deleting anything
-
-The first real deploy into a non-empty directory needs `--claim`, and
-only after you have listed the directory and confirmed what is in it.
-
-## Swatches
-
-The six washes in "Off the clock" are generated, not stock art:
-
-```
-python3 tools/make-swatches.py
-```
-
-It writes `img/swatch-<name>.png` using the standard library only — no
-numpy, no Pillow. The model is a cheap version of Curtis et al. 1997:
-edge darkening, granulation, and backruns, with pigment applied by
-Beer-Lambert so thin areas let the page ground through. Output is
-deterministic; change `SEED` in the script to reroll the accidents.
-
-To use hand-painted scans instead, export PNGs with transparent
-backgrounds and drop them in `img/` under the same six filenames. No
-CSS change needed.
+**Content** is not. The prose, the résumé, the case study, and the
+swatch images are © 2026 Kevin Rocci, all rights reserved. Please do not
+republish them as your own.

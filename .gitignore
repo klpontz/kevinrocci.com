@@ -2,3 +2,7 @@
 
 # Deploy credentials. Never commit.
 .deploy.env
+
+# Local operations runbook. Host details, paths, and the reasons behind
+# them stay off the public repo.
+CLAUDE.md
