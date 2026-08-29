@@ -57,8 +57,28 @@ that lost, as a record of the exploration. Render either by name.
 
 ## Publishing
 
-Upload the four paths above to the Bluehost `public_html` directory,
-keeping the same structure. Nothing needs to be compiled first.
+Hosted on Bluehost. Deploy over SSH/SFTP:
+
+```
+cp .deploy.env.example .deploy.env   # fill in host, user, remote dir
+./deploy.sh --dry-run                # preview
+./deploy.sh                          # upload
+```
+
+`.deploy.env` holds the credentials and is gitignored. It must never be
+committed.
+
+The script prefers `rsync` over SSH, which sends only changed files and
+supports a real dry run. If the host allows SFTP but not a login shell
+it falls back to an `sftp` batch that mirrors the tree. Force that path
+with `./deploy.sh --sftp`.
+
+Only the live payload ships: `index.html`, `style.css`, `nav.js`,
+`favicon.svg`, `img/`, and `work/`. The swatch generator, this README
+and the git metadata stay local.
+
+Directory structure matters — the case study lives at
+`/work/hiring-automation/`. Do not flatten it.
 
 ## Swatches
 
