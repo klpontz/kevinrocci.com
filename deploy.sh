@@ -159,7 +159,7 @@ trap 'rm -f "$BATCH"' EXIT
   for f in .htaccess index.html style.css nav.js favicon.svg; do
     echo "put $f"
   done
-  echo "put img/feather.svg img/feather.svg"
+  echo "put img/magpie.svg img/magpie.svg"
   for f in img/magpie/*.png; do
     echo "put $f $f"
   done

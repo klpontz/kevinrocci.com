@@ -139,7 +139,8 @@ body.case .rail { padding: 40px 30px 34px; gap: 26px; }
 
 /* The white block on the dark rail is the magpie's scapular patch —
    the one hard-edged white shape on an otherwise black bird. It is why
-   the mark sits in a filled box rather than floating free. */
+   the mark sits in a filled box rather than floating free, and why the
+   favicon repeats the same box. */
 .monogram {
   width: 86px; height: 86px;
   background: var(--ground);
@@ -148,9 +149,9 @@ body.case .rail { padding: 40px 30px 34px; gap: 26px; }
   border-radius: 18px;
   text-decoration: none;
 }
-.monogram svg { width: 46px; height: 46px; display: block; }
+.monogram svg { width: 52px; height: 52px; display: block; }
 body.case .monogram { width: 74px; height: 74px; border-radius: 16px; }
-body.case .monogram svg { width: 40px; height: 40px; }
+body.case .monogram svg { width: 45px; height: 45px; }
 a.monogram:hover { color: var(--accent); }
 
 .rail-name { font-size: 21px; font-weight: 600; line-height: 1.2; margin: 0; }

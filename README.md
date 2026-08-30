@@ -144,7 +144,8 @@ index.html                          home
 work/hiring-automation/index.html   case study
 style.css                           one stylesheet, design notes at the top
 nav.js                              scroll-spy for the sidebar
-favicon.svg                         feather mark, also used in the sidebar
+favicon.svg                         tab icon: the magpie in its chalk box
+img/magpie.svg                      the silhouette, inlined into both pages
 img/magpie/swatch-*.png             the six washes
 tools/make-swatches.py              generates them
 ```
