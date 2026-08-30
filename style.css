@@ -82,6 +82,11 @@ a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset:
 a:hover { color: var(--text); text-decoration-color: var(--spark); }
 :focus-visible { outline: 2px solid var(--spark); outline-offset: 3px; border-radius: 4px; }
 
+/* Separator in metadata strips. It is a word of its own, so the line
+   can break either side of it — &nbsp; on both sides glues the whole
+   strip into one token and overflows narrow screens. */
+.sep { opacity: 0.55; padding: 0 0.35em; }
+
 .label {
   font-family: var(--mono);
   font-size: 11px;
@@ -512,4 +517,137 @@ h3, .card-head h3 { font-weight: 650; font-variation-settings: "opsz" 24, "SOFT"
 
 @media (prefers-reduced-motion: reduce) {
   .card:hover, .chip-wrap:hover .chip, .rail:hover .monogram { transform: none; }
+}
+
+/* ------------------------------------------------------------------
+   Mobile top bar
+
+   Below 880px the rail becomes a block at the top of the page and
+   scrolls away, which left no navigation once you were reading. This
+   is the replacement: the rail still opens the page in full, and once
+   it scrolls out of reach a compact bar slides down carrying the mark,
+   the name and a menu.
+
+   It is position: fixed rather than sticky. A sticky element that
+   changes height shifts the content below it; fixed is out of flow, so
+   the bar arrives without the page moving under the reader.
+
+   Built by nav.js from the rail's own mark and links — see the note
+   there. Hidden entirely on desktop, where the rail is always present.
+   ------------------------------------------------------------------ */
+
+.topbar { display: none; }
+
+@media (max-width: 880px) {
+
+  .topbar {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 80;
+    /* Same structural colour as the rail, so the bar reads as the rail
+       arriving rather than as a second piece of furniture. */
+    background:
+      linear-gradient(112deg,
+        transparent 24%,
+        rgba(64, 148, 168, 0.14) 46%,
+        rgba(96, 122, 190, 0.08) 58%,
+        transparent 74%),
+      linear-gradient(160deg, var(--irid-violet) 0%, var(--irid-blue) 70%, var(--irid-teal) 100%);
+    background-color: var(--rail-bg);
+    color: var(--ground);
+    transform: translateY(-101%);
+    transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 24px rgba(12, 16, 22, 0.22);
+  }
+  .topbar.is-visible { transform: translateY(0); }
+
+  .topbar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 20px;
+  }
+
+  .topbar-mark {
+    flex: none;
+    width: 38px; height: 38px;
+    display: grid; place-items: center;
+    background: var(--ground);
+    color: var(--rail-deep);
+    border-radius: 10px;
+    text-decoration: none;
+  }
+  .topbar-mark svg { width: 25px; height: 25px; display: block; }
+
+  .topbar-name {
+    font-family: var(--display);
+    font-variation-settings: "opsz" 24, "SOFT" 60, "WONK" 1;
+    font-weight: 650;
+    font-size: 17px;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-toggle {
+    margin-left: auto;
+    flex: none;
+    /* 44px is the smallest comfortable touch target. The bars inside
+       are 18px wide; the rest is thumb room. */
+    width: 44px; height: 44px;
+    padding: 13px;
+    background: none;
+    border: 0;
+    border-radius: 9px;
+    cursor: pointer;
+    display: grid;
+    align-content: center;
+    gap: 4px;
+  }
+  .topbar-toggle span {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(var(--rail-fg-rgb), 0.92);
+    transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 140ms ease;
+  }
+  .topbar.is-open .topbar-toggle span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .topbar.is-open .topbar-toggle span:nth-child(2) { opacity: 0; }
+  .topbar.is-open .topbar-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  .topbar-menu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .topbar.is-open .topbar-menu {
+    max-height: 72vh;
+    overflow-y: auto;
+    border-top: 1px solid rgba(var(--rail-fg-rgb), 0.16);
+  }
+
+  .topbar-menu a {
+    display: block;
+    padding: 12px 20px;
+    font-size: 16px;
+    color: rgba(var(--rail-fg-rgb), 0.94);
+    text-decoration: none;
+    border-top: 1px solid rgba(var(--rail-fg-rgb), 0.09);
+  }
+  .topbar-menu a:first-child { border-top: none; }
+  .topbar-menu a.is-active {
+    color: var(--ground);
+    box-shadow: inset 3px 0 0 var(--spark);
+  }
+
+  /* Anchor jumps must clear the fixed bar. */
+  section, header[id] { scroll-margin-top: 68px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar, .topbar-menu, .topbar-toggle span { transition: none !important; }
 }
