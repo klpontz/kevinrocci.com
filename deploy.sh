@@ -163,6 +163,7 @@ trap 'rm -f "$BATCH"' EXIT
   for f in img/magpie/*.png; do
     echo "put $f $f"
   done
+  echo "put work/index.html work/index.html"
   echo "put work/hiring-automation/index.html work/hiring-automation/index.html"
   echo "bye"
 } > "$BATCH"
