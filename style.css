@@ -47,7 +47,11 @@
   --accent:    #1A5F92;  /* the blue that catches the light */
   --fill-edge: #CFDEE8;
   --fill:      #E9F1F6;
-  --spark:     #F0AD1B;  /* bill and eye ring */
+  --spark:     #F0AD1B;  /* eye ring, and the accent it lends the page */
+  --bill:      #E5901F;  /* the bill itself — the same mark, one step
+                            warmer, because at monogram size a pure
+                            yellow reads as a highlight rather than a
+                            beak. On the bird it is orange-gold. */
   --line:      #E3DFD6;
 
   /* Iridescence, sampled across the wing and tail. Violet at the head
@@ -511,12 +515,36 @@ h3, .card-head h3 { font-weight: 650; font-variation-settings: "opsz" 24, "SOFT"
 .chip { transition: transform 260ms cubic-bezier(.34,1.4,.64,1); }
 .chip-wrap:hover .chip { transform: rotate(0deg) scale(1.14); }
 
-/* The monogram is the only mark on the page, so let it react. */
-.monogram { transition: transform 240ms cubic-bezier(.34,1.4,.64,1); }
-.rail:hover .monogram { transform: rotate(-3deg); }
+/* Point at the rail and the bird hops. The box stays put — it is the
+   scapular patch, a marking, and markings do not move. The bird does.
+
+   A magpie on the ground does not walk, it hops: crouch, spring, land,
+   and a smaller second hop to settle. That is the shape of the
+   keyframes. The origin sits at 50% 78%, which is where the feet are
+   in the 32-unit viewBox, so the squash reads as legs loading rather
+   than the whole mark shrinking. The tilt goes the other way on the
+   second hop, the way a bird corrects itself. */
+@keyframes magpie-hop {
+  0%   { transform: translateY(0)    scale(1, 1); }
+  8%   { transform: translateY(3%)   scale(1.07, 0.91); animation-timing-function: cubic-bezier(.25,.9,.35,1); }
+  28%  { transform: translateY(-27%) scale(0.96, 1.06) rotate(-6deg); animation-timing-function: cubic-bezier(.6,0,.75,.3); }
+  44%  { transform: translateY(0)    scale(1.06, 0.93); }
+  54%  { transform: translateY(0)    scale(1, 1); }
+  63%  { transform: translateY(2%)   scale(1.04, 0.95); animation-timing-function: cubic-bezier(.25,.9,.35,1); }
+  78%  { transform: translateY(-14%) scale(0.98, 1.03) rotate(4deg); animation-timing-function: cubic-bezier(.6,0,.75,.3); }
+  90%  { transform: translateY(0)    scale(1.03, 0.96); }
+  100% { transform: translateY(0)    scale(1, 1); }
+}
+
+.monogram svg {
+  transform-origin: 50% 78%;
+  will-change: transform;
+}
+.rail:hover .monogram svg { animation: magpie-hop 1020ms ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .card:hover, .chip-wrap:hover .chip, .rail:hover .monogram { transform: none; }
+  .card:hover, .chip-wrap:hover .chip { transform: none; }
+  .rail:hover .monogram svg { animation: none; }
 }
 
 /* ------------------------------------------------------------------
